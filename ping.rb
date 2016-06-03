@@ -78,7 +78,5 @@ threads.each do |t|
   t.join
 end
 
-system("heroku config:set FOO=bar")
-
 puts "Finish checking handles at #{Time.now}"
 
