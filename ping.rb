@@ -2,7 +2,10 @@ require 'open-uri'
 require 'open_uri_redirections'
 require 'mail'
 
-HANDLE_URI_FORMAT = {
+# 3rd party URI patterns for username page
+# Values contain urls stubbed with :username, that will be replaced
+# with desired handle
+HANDLE_URI_PATTERNS = {
   'TWITTER'   => "http://www.twitter.com/:username",
   'INSTAGRAM' => "http://www.instagram.com/:username"
 }
@@ -20,9 +23,14 @@ Mail.defaults do
   delivery_method :smtp, mail_options
 end
 
+# GETs username page to check availability
+# If open-uri can open page, username unavailable; otherwise, alert via email
 def ping(service, uri)
   puts "Pinging #{service}: #{uri}"
+
   begin
+    # open-uri follows redirects; must use open_uri_redirections gem
+    # for SSL redirections
     open(uri, allow_redirections: :all)
     puts "** #{service} handle unavailable **"
   rescue OpenURI::HTTPError => e
@@ -41,10 +49,22 @@ def send_email(subject, body)
   end
 end
 
-# Service handles stored as environment variables with format:
-# <SERVICE NAME>_HANDLE = <HANDLE VALUE>
-def get_handles
-  handles = {}
+# Desired handles stored as environment variables with format:
+# <SERVICE NAME>_HANDLE=<HANDLE VALUE>, e.g. TWITTER_HANDLE=awesomesauce
+#
+# Read handles from ENV, and return hash with format
+# {
+#   SEVICE_NAME => SERVICE_URL
+# } 
+#
+# e.g.
+#
+# {
+#   "TWITTER"   => "http://www.twitter.com/awesomesauce",
+#   "INSTAGRAM" => "http://www.instagram.com/awesomesauce"
+# }
+def get_handle_urls
+  urls = {}
 
   # Loop through all env vars
   ENV.each do |k, v|
@@ -55,25 +75,25 @@ def get_handles
 
       # Get URI specific to service and replace stubbed username part
       # with HANDLE VALUE
-      uri = HANDLE_URI_FORMAT[service].gsub(':username', v)
+      uri = HANDLE_URI_PATTERNS[service].gsub(':username', v)
 
-      handles[service] = uri
+      urls[service] = uri
     end
   end
 
-  return handles
+  return urls
 end
 
 puts "Checking handles at #{Time.now}"
 
 threads = []
-handles = get_handles
+urls    = get_handle_urls
 
-handles.each do |key, value|
-  threads << Thread.new { ping(key, value) }
+urls.each do |service_name, url|
+  threads << Thread.new { ping(service_name, url) }
 end
 
-threads.each do |t|
+threads.each do |t| 
   t.join
 end
 
