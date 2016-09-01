@@ -1,6 +1,7 @@
 require 'open-uri'
 require 'open_uri_redirections'
 require 'mail'
+require 'pry'
 
 # 3rd party URI patterns for username page
 # Values contain urls stubbed with :username, that will be replaced
@@ -34,8 +35,14 @@ def ping(service, uri)
     open(uri, allow_redirections: :all)
     puts "** #{service} handle unavailable **"
   rescue OpenURI::HTTPError => e
-    msg = "#{service} handle possibly available"
-    puts "** #{msg} **"
+    msg  = e.message
+    code = msg.split(' ').first.to_i
+
+    if code < 500 && code > 399
+      msg = "#{service} handle possibly available"
+      puts "** #{msg} **"
+    end
+
     send_email(msg, e.message)
   end
 end
