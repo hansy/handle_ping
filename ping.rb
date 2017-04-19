@@ -1,7 +1,6 @@
 require 'open-uri'
 require 'open_uri_redirections'
 require 'mail'
-require 'pry'
 
 # 3rd party URI patterns for username page
 # Values contain urls stubbed with :username, that will be replaced
