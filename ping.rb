@@ -34,15 +34,14 @@ def ping(service, uri)
     open(uri, allow_redirections: :all)
     puts "** #{service} handle unavailable **"
   rescue OpenURI::HTTPError => e
-    msg  = e.message
     code = msg.split(' ').first.to_i
 
     if code < 500 && code > 399
       msg = "#{service} handle possibly available"
       puts "** #{msg} **"
-    end
 
-    send_email(msg, e.message)
+      send_email(msg, e.message)
+    end
   end
 end
 
