@@ -1,5 +1,5 @@
 # handle_ping
-Script for pinging websites to check handle availability (e.g. check if @username is available on Twitter).
+Cron script for pinging websites to check handle availability (e.g. check if @username is available on Twitter).
 
 Twitter, Instagram support right out of the box.
 
